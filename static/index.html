@@ -4,221 +4,53 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>VoxAgent</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #04070b;
-    --bg-panel: #0a131c;
-    --cyan: #2be8ff;
-    --cyan-dim: #0d4f5c;
-    --amber: #ffb454;
-    --text: #cdeef2;
-    --text-dim: #5d7c84;
-    --level: 0;
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    min-height: 100vh;
-    background:
-      radial-gradient(ellipse at 50% 0%, rgba(43,232,255,0.07), transparent 60%),
-      var(--bg);
-    color: var(--text);
-    font-family: 'Rajdhani', sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    overflow-x: hidden;
-  }
-
-  .frame::before, .frame::after,
-  .frame-bottom::before, .frame-bottom::after {
-    content: '';
-    position: fixed;
-    width: 28px; height: 28px;
-    border: 2px solid var(--cyan-dim);
-  }
-  .frame::before { top: 18px; left: 18px; border-right: none; border-bottom: none; }
-  .frame::after { top: 18px; right: 18px; border-left: none; border-bottom: none; }
-  .frame-bottom::before { bottom: 18px; left: 18px; border-right: none; border-top: none; }
-  .frame-bottom::after { bottom: 18px; right: 18px; border-left: none; border-top: none; }
-
-  header {
-    margin-top: 36px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  h1 {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: 6px;
-    margin: 0;
-    color: var(--cyan);
-    text-shadow: 0 0 18px rgba(43,232,255,0.5);
-  }
-
-  .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--text-dim);
-  }
-  .dot.live { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); animation: blink 1.6s ease-in-out infinite; }
-
-  @keyframes blink { 50% { opacity: 0.35; } }
-
-  .orb-wrap {
-    position: relative;
-    width: 280px; height: 280px;
-    margin: 56px 0 28px;
-    display: flex; align-items: center; justify-content: center;
-  }
-
-  .ring {
-    position: absolute;
-    border-radius: 50%;
-    border: 1px solid var(--cyan-dim);
-    transition: border-color 0.4s ease;
-  }
-  .ring.r1 { inset: 0; animation: spin 18s linear infinite; border-style: dashed; }
-  .ring.r2 { inset: 22px; animation: spin 12s linear infinite reverse; }
-  .ring.r3 { inset: 44px; border-color: var(--cyan); opacity: 0.5; }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .core {
-    width: 132px; height: 132px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, rgba(43,232,255,0.9), rgba(43,232,255,0.15) 60%, transparent 75%);
-    box-shadow: 0 0 40px rgba(43,232,255, calc(0.25 + var(--level) * 0.5));
-    transform: scale(calc(1 + var(--level) * 0.18));
-    transition: box-shadow 0.08s linear, transform 0.08s linear, background 0.4s ease;
-    animation: breathe 4s ease-in-out infinite;
-  }
-  @keyframes breathe { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.15); } }
-
-  .orb-wrap.listening .ring { border-color: var(--amber); }
-  .orb-wrap.listening .core {
-    background: radial-gradient(circle at 35% 30%, rgba(255,180,84,0.9), rgba(255,180,84,0.15) 60%, transparent 75%);
-    box-shadow: 0 0 50px rgba(255,180,84, calc(0.3 + var(--level) * 0.6));
-  }
-
-  .orb-wrap.thinking .ring { animation-duration: 3s; }
-  .orb-wrap.thinking .core { animation: think-pulse 0.9s ease-in-out infinite; }
-  @keyframes think-pulse { 0%,100% { filter: brightness(0.9); } 50% { filter: brightness(1.4); } }
-
-  .orb-wrap.speaking .ring.r3 { opacity: 0.9; }
-
-  #talkBtn {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    touch-action: none;
-  }
-
-  #status {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    letter-spacing: 1px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    min-height: 18px;
-  }
-  #status::after { content: '_'; animation: blink 1s step-end infinite; }
-
-  #log {
-    width: 640px; max-width: 90vw;
-    margin: 36px 0 60px;
-    display: flex; flex-direction: column; gap: 10px;
-  }
-
-  .line {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13.5px;
-    line-height: 1.6;
-    padding: 10px 14px;
-    border-left: 2px solid var(--cyan-dim);
-    background: var(--bg-panel);
-    animation: fadeIn 0.3s ease;
-  }
-  .line.user { border-left-color: var(--text-dim); color: var(--text); }
-  .line.jarvis { border-left-color: var(--cyan); color: var(--cyan); }
-  .line .tag { color: var(--text-dim); margin-right: 8px; }
-
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  body { font-family: system-ui, sans-serif; background: #0a0e14; color: #e6edf3; display: flex; flex-direction: column; align-items: center; padding-top: 60px; margin: 0; }
+  h1 { color: #4fd1c5; letter-spacing: 1px; }
+  #talkBtn { width: 140px; height: 140px; border-radius: 50%; background: #1a2230; border: 2px solid #4fd1c5; color: #4fd1c5; font-size: 16px; cursor: pointer; transition: 0.15s; touch-action: none; }
+  #talkBtn:active, #talkBtn.recording { background: #4fd1c5; color: #0a0e14; transform: scale(0.96); }
+  #talkBtn.speaking { border-color: #ffb454; }
+  #status { margin-top: 20px; color: #8b96a5; min-height: 20px; }
+  .bubble { max-width: 500px; margin: 6px 0; padding: 12px 16px; border-radius: 12px; line-height: 1.4; }
+  .user { background: #1a2230; }
+  .jarvis { background: #14302c; border: 1px solid #4fd1c5; }
+  #log { display: flex; flex-direction: column; width: 600px; max-width: 90vw; margin-top: 30px; }
 </style>
 </head>
 <body>
-  <div class="frame"></div>
-  <div class="frame-bottom"></div>
-
-  <header>
-    <span class="dot" id="connDot"></span>
-    <h1>VOXAGENT</h1>
-  </header>
-
-  <div class="orb-wrap" id="orbWrap">
-    <div class="ring r1"></div>
-    <div class="ring r2"></div>
-    <div class="ring r3"></div>
-    <div class="core"></div>
-    <button id="talkBtn" aria-label="Hold to talk"></button>
-  </div>
-
-  <div id="status">Connecting</div>
+  <h1>VOXAGENT</h1>
+  <button id="talkBtn">Hold to Talk</button>
+  <div id="status">Connecting...</div>
   <div id="log"></div>
 
 <script>
-  const orbWrap = document.getElementById("orbWrap");
   const talkBtn = document.getElementById("talkBtn");
   const statusEl = document.getElementById("status");
   const logEl = document.getElementById("log");
-  const connDot = document.getElementById("connDot");
 
   const ws = new WebSocket(`ws://${location.host}/ws`);
   let mediaRecorder, chunks = [];
-  let audioCtx;
-  let micRaf, outRaf;
   let recordStartTime;
+  let currentAudio = null; // tracks JARVIS's currently playing reply, for barge-in
 
-  function setState(state) {
-    orbWrap.className = "orb-wrap" + (state ? " " + state : "");
-  }
-
-  function ensureAudioCtx() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === "suspended") audioCtx.resume();
-    return audioCtx;
-  }
-
-  ws.onopen = () => { statusEl.textContent = "Ready — hold to speak"; connDot.classList.add("live"); };
-  ws.onclose = () => { statusEl.textContent = "Disconnected"; connDot.classList.remove("live"); };
+  ws.onopen = () => statusEl.textContent = "Connected. Hold the button and speak.";
+  ws.onclose = () => statusEl.textContent = "Disconnected.";
 
   ws.onmessage = async (event) => {
     if (typeof event.data === "string") {
       const msg = JSON.parse(event.data);
-      if (msg.type === "transcript") addLine(msg.text, "user", "YOU");
-      if (msg.type === "reply") addLine(msg.text, "jarvis", "JARVIS");
-      if (msg.type === "error") { statusEl.textContent = msg.message; setState(""); }
+      if (msg.type === "transcript") addBubble(msg.text, "user");
+      if (msg.type === "reply") addBubble(msg.text, "jarvis");
+      if (msg.type === "error") statusEl.textContent = msg.message;
     } else {
-      setState("speaking");
-      statusEl.textContent = "Speaking";
       playReply(event.data);
     }
   };
 
-  function addLine(text, who, tag) {
+  function addBubble(text, who) {
     const div = document.createElement("div");
-    div.className = `line ${who}`;
-    div.innerHTML = `<span class="tag">${tag} ></span>${text}`;
+    div.className = `bubble ${who}`;
+    div.textContent = (who === "user" ? "You: " : "JARVIS: ") + text;
     logEl.appendChild(div);
     div.scrollIntoView({ behavior: "smooth", block: "end" });
   }
@@ -227,75 +59,56 @@
     const blob = new Blob([arrayBuffer], { type: "audio/mpeg" });
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
+    currentAudio = audio;
 
-    const ctx = ensureAudioCtx();
-    const source = ctx.createMediaElementSource(audio);
-    const analyser = ctx.createAnalyser();
-    analyser.fftSize = 256;
-    source.connect(analyser);
-    analyser.connect(ctx.destination);
-
-    const data = new Uint8Array(analyser.frequencyBinCount);
-    function loop() {
-      analyser.getByteFrequencyData(data);
-      const avg = data.reduce((a, b) => a + b, 0) / data.length / 255;
-      document.documentElement.style.setProperty("--level", avg.toFixed(3));
-      outRaf = requestAnimationFrame(loop);
-    }
-    loop();
+    talkBtn.classList.add("speaking");
+    statusEl.textContent = "JARVIS is speaking... (hold to interrupt)";
 
     audio.onended = () => {
-      cancelAnimationFrame(outRaf);
-      document.documentElement.style.setProperty("--level", 0);
-      statusEl.textContent = "Ready — hold to speak";
-      setState("");
+      if (currentAudio === audio) currentAudio = null;
+      talkBtn.classList.remove("speaking");
+      statusEl.textContent = "Hold the button and speak.";
     };
+
     audio.play();
   }
 
+  function interruptIfSpeaking() {
+    if (currentAudio && !currentAudio.paused) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      currentAudio = null;
+      talkBtn.classList.remove("speaking");
+      statusEl.textContent = "Interrupted — listening...";
+    }
+  }
+
   async function startRecording() {
-    const ctx = ensureAudioCtx();
+    interruptIfSpeaking();
+
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorder = new MediaRecorder(stream);
     chunks = [];
 
-    const micSource = ctx.createMediaStreamSource(stream);
-    const micAnalyser = ctx.createAnalyser();
-    micAnalyser.fftSize = 256;
-    micSource.connect(micAnalyser);
-    const data = new Uint8Array(micAnalyser.frequencyBinCount);
-
-    function loop() {
-      micAnalyser.getByteFrequencyData(data);
-      const avg = data.reduce((a, b) => a + b, 0) / data.length / 255;
-      document.documentElement.style.setProperty("--level", avg.toFixed(3));
-      micRaf = requestAnimationFrame(loop);
-    }
-    loop();
-
     mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
     mediaRecorder.onstop = () => {
-      cancelAnimationFrame(micRaf);
-      document.documentElement.style.setProperty("--level", 0);
-
       const duration = Date.now() - recordStartTime;
       const blob = new Blob(chunks, { type: "audio/webm" });
 
       if (duration < 400 || blob.size < 2000) {
         statusEl.textContent = "Too short — hold and speak";
-        setState("");
         return;
       }
 
       blob.arrayBuffer().then((buf) => ws.send(buf));
-      setState("thinking");
-      statusEl.textContent = "Thinking";
+      statusEl.textContent = "Thinking...";
     };
 
     mediaRecorder.start();
     recordStartTime = Date.now();
-    setState("listening");
-    statusEl.textContent = "Listening";
+    talkBtn.classList.add("recording");
+    talkBtn.textContent = "Listening...";
+    statusEl.textContent = "Recording...";
   }
 
   function stopRecording() {
@@ -303,6 +116,8 @@
       mediaRecorder.stop();
       mediaRecorder.stream.getTracks().forEach((t) => t.stop());
     }
+    talkBtn.classList.remove("recording");
+    talkBtn.textContent = "Hold to Talk";
   }
 
   talkBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); startRecording(); });
