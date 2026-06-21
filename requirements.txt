@@ -8,3 +8,8 @@ scipy
 pygame
 fastapi
 uvicorn[standard]
+langgraph
+langchain-groq
+langchain-core
+ddgs
+requests

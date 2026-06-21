@@ -4,6 +4,7 @@ Browser mic -> WebSocket -> transcribe -> reason -> speak -> WebSocket -> browse
 """
 
 import json
+import time
 import traceback
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -34,7 +35,9 @@ async def voice_socket(websocket: WebSocket):
             print(f"Received {len(audio_bytes)} bytes of audio.")
 
             try:
+                t0 = time.time()
                 user_text = transcribe_bytes(audio_bytes)
+                print(f"  [timing] transcription: {time.time() - t0:.2f}s")
             except Exception as e:
                 print("Transcription failed:")
                 traceback.print_exc()
@@ -48,7 +51,9 @@ async def voice_socket(websocket: WebSocket):
             await websocket.send_text(json.dumps({"type": "transcript", "text": user_text}))
 
             try:
+                t0 = time.time()
                 reply = get_response(user_text, history)
+                print(f"  [timing] agent response: {time.time() - t0:.2f}s")
             except Exception as e:
                 print("LLM call failed:")
                 traceback.print_exc()
@@ -61,7 +66,9 @@ async def voice_socket(websocket: WebSocket):
             await websocket.send_text(json.dumps({"type": "reply", "text": reply}))
 
             try:
+                t0 = time.time()
                 audio_reply = await synthesize(reply)
+                print(f"  [timing] speech synthesis: {time.time() - t0:.2f}s")
                 await websocket.send_bytes(audio_reply)
             except Exception as e:
                 print("Speech synthesis failed:")
