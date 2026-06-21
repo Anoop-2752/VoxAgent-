@@ -19,7 +19,7 @@ from tools import get_weather, web_search
 
 load_dotenv()
 
-VOICE = "en-GB-RyanNeural"  # JARVIS-style British voice (alt: en-GB-ThomasNeural)
+VOICE = "en-GB-RyanNeural"  
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
 SYSTEM_PROMPT = (

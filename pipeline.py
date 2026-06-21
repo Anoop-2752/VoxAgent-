@@ -23,7 +23,7 @@ load_dotenv()
 # ---- Config ----
 SAMPLE_RATE = 16000
 RECORD_SECONDS = 5
-VOICE = "en-GB-RyanNeural"  # JARVIS-style British voice (alt: en-GB-ThomasNeural)
+VOICE = "en-GB-RyanNeural" 
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
 SYSTEM_PROMPT = (
@@ -86,7 +86,7 @@ async def speak(text, voice=VOICE):
     while pygame.mixer.music.get_busy():
         pygame.time.Clock().tick(10)
 
-    pygame.mixer.music.unload()  # release file handle (Windows needs this before delete)
+    pygame.mixer.music.unload()  
     os.remove(tmp_path)
 
 
