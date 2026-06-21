@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>VoxAgent - JARVIS</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #0a0e14; color: #e6edf3; display: flex; flex-direction: column; align-items: center; padding-top: 60px; margin: 0; }
+  h1 { color: #4fd1c5; letter-spacing: 1px; }
+  #talkBtn { width: 140px; height: 140px; border-radius: 50%; background: #1a2230; border: 2px solid #4fd1c5; color: #4fd1c5; font-size: 16px; cursor: pointer; transition: 0.15s; }
+  #talkBtn:active, #talkBtn.recording { background: #4fd1c5; color: #0a0e14; transform: scale(0.96); }
+  #status { margin-top: 20px; color: #8b96a5; min-height: 20px; }
+  .bubble { max-width: 500px; margin: 6px 0; padding: 12px 16px; border-radius: 12px; line-height: 1.4; }
+  .user { background: #1a2230; }
+  .jarvis { background: #14302c; border: 1px solid #4fd1c5; }
+  #log { display: flex; flex-direction: column; width: 600px; max-width: 90vw; margin-top: 30px; }
+</style>
+</head>
+<body>
+  <h1>VOXAGENT</h1>
+  <button id="talkBtn">Hold to Talk</button>
+  <div id="status">Connecting...</div>
+  <div id="log"></div>
+
+<script>
+  const talkBtn = document.getElementById("talkBtn");
+  const statusEl = document.getElementById("status");
+  const logEl = document.getElementById("log");
+
+  const ws = new WebSocket(`ws://${location.host}/ws`);
+  let mediaRecorder;
+  let chunks = [];
+
+  ws.onopen = () => statusEl.textContent = "Connected. Hold the button and speak.";
+  ws.onclose = () => statusEl.textContent = "Disconnected.";
+
+  ws.onmessage = async (event) => {
+    if (typeof event.data === "string") {
+      const msg = JSON.parse(event.data);
+      if (msg.type === "transcript") addBubble(msg.text, "user");
+      if (msg.type === "reply") addBubble(msg.text, "jarvis");
+      if (msg.type === "error") statusEl.textContent = msg.message;
+    } else {
+      const audioBlob = new Blob([event.data], { type: "audio/mpeg" });
+      const url = URL.createObjectURL(audioBlob);
+      const audio = new Audio(url);
+      statusEl.textContent = "JARVIS is speaking...";
+      audio.onended = () => statusEl.textContent = "Hold the button and speak.";
+      audio.play();
+    }
+  };
+
+  function addBubble(text, who) {
+    const div = document.createElement("div");
+    div.className = `bubble ${who}`;
+    div.textContent = (who === "user" ? "You: " : "JARVIS: ") + text;
+    logEl.appendChild(div);
+  }
+
+  async function startRecording() {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    chunks = [];
+
+    mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunks, { type: "audio/webm" });
+      blob.arrayBuffer().then((buf) => ws.send(buf));
+      statusEl.textContent = "Thinking...";
+    };
+
+    mediaRecorder.start();
+    talkBtn.classList.add("recording");
+    talkBtn.textContent = "Listening...";
+    statusEl.textContent = "Recording...";
+  }
+
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach((t) => t.stop());
+    }
+    talkBtn.classList.remove("recording");
+    talkBtn.textContent = "Hold to Talk";
+  }
+
+  talkBtn.addEventListener("mousedown", startRecording);
+  talkBtn.addEventListener("mouseup", stopRecording);
+  talkBtn.addEventListener("mouseleave", () => {
+    if (mediaRecorder && mediaRecorder.state === "recording") stopRecording();
+  });
+</script>
+</body>
+</html>

@@ -6,9 +6,5 @@ sounddevice
 numpy
 scipy
 pygame
-sounddevice
-pygame
-edge-tts
-faster-whisper
-groq
-python-dotenv
+fastapi
+uvicorn[standard]
